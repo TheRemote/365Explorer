@@ -60,7 +60,7 @@ async function loadMFA(user) {
             });
         });
     } catch (err) {
-        console.error('Error disabling account:', err);
+        console.error('Error loading MFA:', err);
     } finally {
         document.getElementById('loadMFA').disabled = false;
     }

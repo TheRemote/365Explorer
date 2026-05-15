@@ -25,7 +25,7 @@ function Get-GraphAppCertificate {
         return $Script:certificate
     }
 
-    Write-Host -ForegroundColor Cyan "Creating in-memory certificate (Cross-Platform)..."
+    Write-Host -ForegroundColor Cyan "Creating certificate at ($CertPath)..."
 
     $dnsName = "365Explorer"
     $subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new("CN=$dnsName")

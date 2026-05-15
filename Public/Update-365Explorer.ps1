@@ -11,7 +11,6 @@ function Update-365Explorer {
         if ((Get-GraphAppDependencies) -eq $false) { Write-Host -ForegroundColor Red "You are missing dependencies.  Please run the command again once as Administrator to automatically install them!"; return $false }
         
         Write-Host -ForegroundColor Cyan "Checking for updates..."
-        return true
 
         # Start Find-Module in a background job
         $job = Start-Job -ScriptBlock {

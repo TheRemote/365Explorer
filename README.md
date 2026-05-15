@@ -2,11 +2,17 @@
 
 **Browser-based Microsoft 365 security investigation tool with application-based authentication.**
 
+![365Explorer](https://jamesachambers.com/wp-content/uploads/2026/05/365Explorer.webp)
+
 365Explorer gives administrators "God Mode" access to their Microsoft 365 tenant for security investigations. It runs a local web server with a browser-based UI, powered by certificate-based application authentication to Microsoft Graph and Exchange Online.
 
 Designed for security investigators who need to access tenant-wide data that would otherwise require E5 licensing or painstaking manual setup through the Entra portal.
 
+Make sure to read my full blog post here to further understand the tool and it's capabilities: https://jamesachambers.com/365explorer-browser-based-powershell-tool-for-365-security-investigations/
+
 ## Features
+
+![365Explorer Email Tab](https://jamesachambers.com/wp-content/uploads/2026/05/365Explorer_EmailsTab.webp)
 
 - **Automated setup** - Creates the Entra application registration, assigns all required permissions, and grants admin consent automatically. No manual portal configuration needed.
 - **Application-based auth** - Uses a self-signed certificate for certificate-based authentication, enabling access beyond what delegated admin rights allow.

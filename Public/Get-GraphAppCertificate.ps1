@@ -7,86 +7,65 @@
     Get-GraphAppCertificate
 #>
 function Get-GraphAppCertificate {
-    # Check certificate
-    if ($null -eq $Script:certificate) {
-        $TmpDir = [System.IO.Path]::GetTempPath()
-        $CertPath = Join-Path $TmpDir "365Explorer.pfx"
-        if (Test-Path -Path "$CertPath") {
-            $Script:certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("$CertPath", (ConvertTo-SecureString -String 'Abcd#1234!' -Force -AsPlainText))
-            return $Script:certificate
-        }
-        else {
-            Write-Host -ForegroundColor Cyan "Creating certificate..."
-            
-            $password = ConvertTo-SecureString 'Abcd#1234!' -AsPlainText -Force
-            $dnsName = "localhost"
+    if ($null -ne $Script:certificate) { return $Script:certificate }
 
-            # Build Distinguished Name
-            $subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new(
-                "CN=$dnsName"
-            )
+    $TmpDir = [System.IO.Path]::GetTempPath()
+    $CertPath = Join-Path $TmpDir "365Explorer.pfx"
+    $PasswordStr = 'Abcd#1234!'
+    $SecurePassword = ConvertTo-SecureString -String $PasswordStr -Force -AsPlainText
 
-            # Create RSA key
-            $rsa = [System.Security.Cryptography.RSA]::Create(2048)
-
-            # Create certificate request
-            $request = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
-                $subject,
-                $rsa,
-                [System.Security.Cryptography.HashAlgorithmName]::SHA256,
-                [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
-            )
-
-            # Enhanced Key Usage (Server Authentication)
-            $ekuCollection = [System.Security.Cryptography.OidCollection]::new()
-
-            [void]$ekuCollection.Add(
-                [System.Security.Cryptography.Oid]::new("1.3.6.1.5.5.7.3.1")
-            )
-
-            $ekuExtension = [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension]::new(
-                $ekuCollection,
-                $false
-            )
-
-            [void]$request.CertificateExtensions.Add($ekuExtension)
-
-            # Subject Alternative Name
-            $sanBuilder = [System.Security.Cryptography.X509Certificates.SubjectAlternativeNameBuilder]::new()
-            $sanBuilder.AddDnsName($dnsName)
-
-            [void]$request.CertificateExtensions.Add($sanBuilder.Build())
-
-            # Create self-signed cert
-            $cert = $request.CreateSelfSigned(
-                [DateTimeOffset]::Now,
-                [DateTimeOffset]::Now.AddYears(1)
-            )
-
-            # Export PFX
-            $pfxBytes = $cert.Export(
-                [System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx,
-                $password
-            )
-
-            # Save to disk
-            [System.IO.File]::WriteAllBytes($CertPath, $pfxBytes)
-
-            # Cleanup
-            $rsa.Dispose()
-            $cert.Dispose()
-
-            # Re-import certificate
-            $Script:certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
-                $CertPath,
-                $password,
-                [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
-            )
-
-            return $Script:certificate
-        }
-    }
-    else {
+    if (Test-Path -Path "$CertPath") {
+        # Fix: Add MachineKeySet and PersistKeySet flags for stable Windows file parsing
+        $Script:certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
+            $CertPath, 
+            $SecurePassword,
+            ([System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor 
+             [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+        )
         return $Script:certificate
     }
+
+    Write-Host -ForegroundColor Cyan "Creating in-memory certificate (Cross-Platform)..."
+
+    $dnsName = "365Explorer"
+    $subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new("CN=$dnsName")
+    $rsa = [System.Security.Cryptography.RSA]::Create(2048)
+
+    $request = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
+        $subject, $rsa,
+        [System.Security.Cryptography.HashAlgorithmName]::SHA256,
+        [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
+    )
+
+    # Inject BOTH Server and Client Auth OIDs so it works on both platforms
+    $ekuCollection = [System.Security.Cryptography.OidCollection]::new()
+    [void]$ekuCollection.Add([System.Security.Cryptography.Oid]::new("1.3.6.1.5.5.7.3.1")) # Server Auth
+    [void]$ekuCollection.Add([System.Security.Cryptography.Oid]::new("1.3.6.1.5.5.7.3.2")) # Client Auth
+    
+    $ekuExtension = [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension]::new($ekuCollection, $false)
+    [void]$request.CertificateExtensions.Add($ekuExtension)
+
+    # Key Usage Flags
+    $keyUsage = [System.Security.Cryptography.X509Certificates.X509KeyUsageExtension]::new(
+        [System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]::DigitalSignature -bor 
+        [System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]::KeyEncipherment, $true
+    )
+    [void]$request.CertificateExtensions.Add($keyUsage)
+
+    # Generate and export safely without touching the Windows Local OS Store
+    # Backdated by 1 hour to easily handle any minor local machine time variations
+    $cert = $request.CreateSelfSigned([DateTimeOffset]::Now.AddHours(-1), [DateTimeOffset]::Now.AddYears(1))
+    $pfxBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx, $SecurePassword)
+    [System.IO.File]::WriteAllBytes($CertPath, $pfxBytes)
+
+    $rsa.Dispose()
+    $cert.Dispose()
+
+    $Script:certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
+        $CertPath, $SecurePassword,
+        ([System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor 
+         [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+    )
+
+    return $Script:certificate
 }

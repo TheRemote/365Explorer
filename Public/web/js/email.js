@@ -27,7 +27,9 @@ async function loadEmails() {
     document.getElementById('loadEmails').disabled = true;
     try {
         const res = await fetch(`/api/emails?${params.toString()}`);
-        const emails = await res.json();
+        const data = await res.json();
+
+        const emails = Array.isArray(data) ? data : [data];
 
         const tbody = document.querySelector('#emailTable tbody');
         tbody.innerHTML = '';

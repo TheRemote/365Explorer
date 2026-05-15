@@ -5,7 +5,11 @@ $GetEmailsScript = {
         return
     }
 
-    $mailcount = [int]($WebEvent.Query['mailcount'] ?? 10)
+    if ([string]::IsNullOrEmpty($WebEvent.Query['mailcount'])) {
+        $mailcount = 10
+    } else {
+        $mailcount = [int]$WebEvent.Query['mailcount']
+    }
     $subjectSearch = $WebEvent.Query['subject']
     $startDate = $WebEvent.Query['start']
     $endDate = $WebEvent.Query['end']
@@ -61,7 +65,7 @@ $GetEmailsScript = {
             From                   = $email.From.EmailAddress.Address
             To                     = ($email.ToRecipients | ForEach-Object { $_.EmailAddress.Address }) -join ', '
             ReplyTo                = ($email.ReplyTo | ForEach-Object { $_.EmailAddress.Address }) -join ', '
-            SentDateTime           = $email.SentDateTime
+            SentDateTime           = if ($email.SentDateTime) { ([DateTime]$email.SentDateTime).ToString("yyyy-MM-ddTHH:mm:ssZ") } else { $null }
             HasAttachments         = $email.HasAttachments
             Attachments            = $attachments
             Body                   = $email.Body.Content

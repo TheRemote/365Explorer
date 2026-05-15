@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>365 Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <label for="userSelect">Select User:</label>
+  <select id="userSelect"></select>
+
+  <div class="tab-container">
+    <div class="tab-buttons">
+      <button class="tab-btn active" data-tab="accountTab">Account</button>
+      <button class="tab-btn" data-tab="MFATab">MFA</button>
+      <button class="tab-btn" data-tab="SignInTab">Sign-In Logs</button>
+      <button class="tab-btn" data-tab="AuditTab">Audit Logs</button>
+      <button class="tab-btn" data-tab="oneDriveTab">OneDrive</button>
+      <button class="tab-btn" data-tab="rulesTab">Mail Rules</button>
+      <button class="tab-btn" data-tab="emailsTab">Emails</button>
+      <button class="tab-btn" data-tab="headersTab">Headers</button>
+      <button class="tab-btn" data-tab="bodyTab">Body</button>
+    </div>
+
+    <div id="accountTab" class="tab-content active">
+      <button id="loadAccount">Load Account</button>
+      <button id="disableAccount">Block Sign-In</button>
+      <button id="enableAccount">Allow Sign-In</button>
+      <button id="signOutAccount">Sign Out All Sessions</button>
+      <div id="accountInfo"></div>
+    </div>
+
+    <div id="MFATab" class="tab-content">
+      <button id="loadMFA">Load MFA Methods</button>
+      <div id="MFAInfo"></div>
+    </div>
+
+    <div id="SignInTab" class="tab-content">
+      <div class="slider-container">
+        <label for="daysRange">Days:</label>
+        <input type="range" id="daysRange" min="1" max="90" value="3">
+        <span id="daysValue">3</span>
+      </div>
+      <button id="loadSignInLogs">Load Sign-In Logs</button>
+      <button id="downloadSignInCsvBtn">Download CSV</button>
+      <div id="progressContainer">
+        <progress id="progressBar" value="0" max="100"></progress>
+        <div id="progressText"></div>
+      </div>
+      <div class="table-container">
+        <table id="signInTable" class="data-table">
+          <thead>
+            <tr>
+              <th>CreatedDateTime</th>
+              <th>AppDisplayName</th>
+              <th>ResourceDisplayName</th>
+              <th>ClientAppUsed</th>
+              <th>IsInteractive</th>
+              <th>IPAddress</th>
+              <th>City</th>
+              <th>State</th>
+              <th>CountryOrRegion</th>
+              <th>StatusDetail</th>
+              <th>StatusErrorCode</th>
+              <th>StatusFailureReason</th>
+              <th>ConditionalAccessPolicies</th>
+              <th>ConditionalAccessStatus</th>
+              <th>DeviceBrowser</th>
+              <th>DeviceOperatingSystem</th>
+              <th>DeviceName</th>
+              <th>DeviceIsCompliant</th>
+              <th>DeviceIsManaged</th>
+              <th>DeviceTrust</th>
+              <th>UserDisplayName</th>
+              <th>UserPrincipalName</th>
+              <th>AppId</th>
+              <th>CorrelationId</th>
+              <th>DeviceId</th>
+              <th>Id</th>
+              <th>UserId</th>
+              <th>ResourceId</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="AuditTab" class="tab-content">
+      <div class="slider-container">
+        <label for="daysRangeAudit">Days:</label>
+        <input type="range" id="daysRangeAudit" min="1" max="90" value="3">
+        <span id="daysValueAudit">3</span>
+      </div>
+      <button id="loadAuditLogs">Load Audit Logs</button>
+      <button id="downloadCsvBtn">Download CSV</button>
+      <div id="auditProgressContainer">
+        <progress id="auditProgressBar" value="0" max="100"></progress>
+        <div id="auditProgressText"></div>
+      </div>
+      <div class="table-container">
+        <table id="auditTable" class="data-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="oneDriveTab" class="tab-content">
+      <div id="oneDriveContainer">
+        <div class="drive-controls">
+          <button id="loadDrives">Load Drives</button>
+          <select id="driveSelect"></select>
+          <button id="goRoot">Go to Root</button>
+        </div>
+
+        <div class="table-container">
+          <div id="oneDriveBreadcrumb"></div>
+          <table id="oneDriveTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Size (KB)</th>
+                <th>Modified</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="rulesTab" class="tab-content">
+      <button id="loadRules">Load Mail Rules</button>
+      <div class="table-container">
+        <table id="rulesTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Enabled</th>
+              <th>Description</th>
+              <th>From</th>
+              <th>RedirectTo</th>
+              <th>ForwardTo</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="emailsTab" class="tab-content">
+    <div class="slider-container">
+      <label for="mailRange">Emails:</label>
+      <input type="range" id="mailRange" min="1" max="200" value="10">
+      <span id="mailValue">10</span>
+    </div>
+
+    <div class="filter-container">
+      <label for="subjectSearch">Subject:</label>
+      <input type="text" id="subjectSearch" placeholder="Optional subject search">
+
+      <label for="startDate">Start Date:</label>
+      <input type="date" id="startDate">
+
+      <label for="endDate">End Date:</label>
+      <input type="date" id="endDate">
+    </div>
+
+    <button id="loadEmails">Load Emails</button>
+
+    <div class="table-container">
+      <table id="emailTable" class="data-table">
+        <thead>
+          <tr>
+            <th>Folder</th>
+            <th>Subject</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Sent</th>
+            <th>Attachments</th>
+            <th>Preview</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="headersTab" class="tab-content">
+    <pre id="headers">Select an email to view headers</pre>
+  </div>
+
+  <div id="bodyTab" class="tab-content">
+    <div id="body">Select an email to view body</div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
